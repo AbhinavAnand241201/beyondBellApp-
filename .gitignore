@@ -1,0 +1,40 @@
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# Environment
+.env
+.env.local
+
+# Secrets — apikeys.md holds the service-role key + AI/payment/email secrets.
+# These must NEVER be committed or shipped in the app bundle.
+docs/ai-reference/apikeys.md
+**/apikeys.md
+
+# Internal design / handoff docs — kept locally, never published
+claude.md
+.claude/
+docs/ai-reference/
+src/config/project.md/
+
+# macOS
+.DS_Store
+
+# IDE
+*.tsbuildinfo

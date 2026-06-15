@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "BeyondBell Circle",
+    "slug": "beyondbell-circle",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "beyondbell",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#F7F7F7"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.beyondbell.circle"
+    },
+    "android": {
+      "package": "com.beyondbell.circle",
+      "adaptiveIcon": {
+        "backgroundColor": "#F5A400"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-font",
+      "expo-asset",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "BeyondBell needs access to your photos so you can attach an image to a post.",
+          "cameraPermission": "BeyondBell needs camera access so you can add a photo to a post."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
