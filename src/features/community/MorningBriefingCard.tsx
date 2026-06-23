@@ -6,7 +6,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button, Card, Text, TextField } from '@/components/ui';
 import { fetchMorningBriefing } from './queries';
 import { addReply } from './mutations';
-import { colors, spacing } from '@/theme/tokens';
+import { colors, fonts, spacing } from '@/theme/tokens';
 
 /**
  * Morning Briefing card (§2.24) — ALWAYS amber background + black text (brand
@@ -33,15 +33,27 @@ export function MorningBriefingCard({ userId }: { userId: string | undefined }) 
   });
 
   const post = briefing.data;
-  if (!post) return null;
+
+  // Empty state — the web shows the amber card even with no briefing yet.
+  if (!post) {
+    return (
+      <Card highlight>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.xs }}>
+          <Ionicons name="sunny" size={16} color={colors.ink} />
+          <Text style={styles.kicker}>MORNING BRIEFING</Text>
+        </View>
+        <Text variant="body" color={colors.ink}>
+          No briefing yet today. Check back at 7:00 AM IST.
+        </Text>
+      </Card>
+    );
+  }
 
   return (
     <Card highlight>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.xs }}>
         <Ionicons name="sunny" size={16} color={colors.ink} />
-        <Text variant="label" color={colors.ink}>
-          Morning Briefing
-        </Text>
+        <Text style={styles.kicker}>MORNING BRIEFING</Text>
       </View>
       <Text variant="h3" color={colors.ink}>
         {post.bodyText}
@@ -70,4 +82,5 @@ export function MorningBriefingCard({ userId }: { userId: string | undefined }) 
 
 const styles = StyleSheet.create({
   replied: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing.md },
+  kicker: { fontFamily: fonts.bodySemibold, fontSize: 12, color: colors.ink, letterSpacing: 0.6 },
 });

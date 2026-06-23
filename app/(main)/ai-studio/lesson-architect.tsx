@@ -16,7 +16,7 @@ import { fetchDailyUsage } from '@/features/ai/usage';
 import { ApiError, isApiConfigured } from '@/lib/api';
 import { env } from '@/config/env';
 import type { Tier } from '@/types/db';
-import { colors, spacing } from '@/theme/tokens';
+import { colors, radius, spacing } from '@/theme/tokens';
 
 import { LessonForm } from '@/features/ai/lesson/LessonForm';
 import { GeneratingOverlay } from '@/features/ai/shared/GeneratingOverlay';
@@ -164,7 +164,7 @@ export default function LessonArchitect() {
   if (view === 'result' && plan) {
     return (
       <Shell>
-        <ScrollView contentContainerStyle={{ padding: spacing.lg, gap: spacing.md, paddingBottom: spacing.xl }}>
+        <ScrollView contentContainerStyle={{ padding: spacing.lg, gap: spacing.md, paddingBottom: 120 }}>
           {demoMode ? (
             <Banner
               tone="info"
@@ -222,13 +222,15 @@ export default function LessonArchitect() {
   // --- form view (default) ---
   return (
     <Shell>
-      <ScrollView contentContainerStyle={{ padding: spacing.lg, gap: spacing.lg, paddingBottom: spacing.xxl }} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={{ padding: spacing.lg, gap: spacing.lg, paddingBottom: 110 }} keyboardShouldPersistTaps="handled">
         <View style={{ gap: spacing.xs }}>
           <Text variant="h2">{tool.label}</Text>
           <Text variant="body" color={colors.muted}>
             Board-aligned lesson plans in under 60 seconds.
           </Text>
         </View>
+
+        <TipsCard />
 
         {!isApiConfigured ? (
           <Banner
@@ -244,23 +246,56 @@ export default function LessonArchitect() {
 
         <LessonForm value={input} onChange={setInput} />
 
+        <SamplePreview />
+      </ScrollView>
+
+      {/* Sticky bottom CTA */}
+      <SafeAreaView edges={['bottom']} style={styles.stickyFooter}>
         <Button
           title="Generate lesson plan"
           onPress={runGenerate}
           disabled={!canRun || limitReached}
           fullWidth
         />
-
-        <SamplePreview />
-      </ScrollView>
+      </SafeAreaView>
 
       <GeneratingOverlay
         visible={view === 'generating'}
-        title="Lesson Architect is thinking…"
-        subtitle="Usually under 60 seconds"
-        steps={['Reading the curriculum…', 'Designing the lesson flow…', 'Crafting the hook & activity…']}
+        title={`Aligning with ${input.board} ${input.grade}${input.subject ? ` ${input.subject}` : ''}`}
+        subtitle="This usually takes 5–10 seconds"
+        steps={[
+          'Learning Objectives',
+          'Prior Knowledge Check',
+          'Introduction and Hook',
+          'Main Teaching Content',
+          'Student Activity',
+          'Formative Assessment',
+          'Closure and Homework',
+        ]}
       />
     </Shell>
+  );
+}
+
+/** Dismissible "Tips for best results" banner at the top of the form. */
+function TipsCard() {
+  const [open, setOpen] = useState(true);
+  if (!open) return null;
+  return (
+    <View style={styles.tipsCard}>
+      <Ionicons name="bulb-outline" size={18} color={colors.amberDark} />
+      <View style={{ flex: 1 }}>
+        <Text variant="label" color={colors.amberDark}>
+          Tips for best results
+        </Text>
+        <Text variant="caption" color={colors.muted} style={{ marginTop: 2 }}>
+          Match your textbook chapter name and pick the exact grade — the closer your inputs, the more board-aligned the plan.
+        </Text>
+      </View>
+      <Pressable onPress={() => setOpen(false)} hitSlop={8}>
+        <Ionicons name="close" size={18} color={colors.mutedLight} />
+      </Pressable>
+    </View>
   );
 }
 
@@ -334,4 +369,25 @@ function SamplePreview() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.canvas },
   backLink: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, alignSelf: 'flex-start' },
+  stickyFooter: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: colors.surface,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+  },
+  tipsCard: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    alignItems: 'flex-start',
+    backgroundColor: '#FFFBEB',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    borderRadius: radius.md,
+    padding: spacing.md,
+  },
 });

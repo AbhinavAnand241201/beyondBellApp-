@@ -1,14 +1,13 @@
 import { View, StyleSheet } from 'react-native';
 
-import { Text } from '@/components/ui';
+import { BrandLogo, Text } from '@/components/ui';
 import { colors, spacing } from '@/theme/tokens';
 
 export function AuthHeader({ title, subtitle }: { title: string; subtitle: string }) {
   return (
     <View style={styles.wrap}>
-      <View style={styles.mark}>
-        <Text style={styles.markText}>BB</Text>
-      </View>
+      {/* Black logo reads on the white auth screen. */}
+      <BrandLogo variant="black" height={40} style={{ marginBottom: spacing.md }} />
       <Text variant="h1">{title}</Text>
       <Text variant="body" color={colors.muted}>
         {subtitle}
@@ -19,14 +18,4 @@ export function AuthHeader({ title, subtitle }: { title: string; subtitle: strin
 
 const styles = StyleSheet.create({
   wrap: { gap: spacing.sm, marginBottom: spacing.xl },
-  mark: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: colors.amber,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-  },
-  markText: { color: colors.ink, fontWeight: '800', fontSize: 18 },
 });

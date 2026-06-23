@@ -1,33 +1,58 @@
-import { StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { Card, Pill, Text } from '@/components/ui';
-import { colors, radius, spacing } from '@/theme/tokens';
+import { Text } from '@/components/ui';
+import { colors, fonts, radius, spacing } from '@/theme/tokens';
 import type { LessonPlan } from './types';
 
 /** Renders the full 7-part BeyondBell lesson plan (§2.2). Presentational only. */
 export function LessonPlanView({ plan }: { plan: LessonPlan }) {
+  const h = plan.header;
+  const tags = [h.subject, h.grade, h.board, h.duration].filter(Boolean);
+
   return (
     <View style={{ gap: spacing.md }}>
-      <HeaderBlock plan={plan} />
+      {/* Meta chips + title */}
+      <View style={{ gap: spacing.sm }}>
+        <View style={styles.tagRow}>
+          {tags.map((t) => (
+            <View key={t} style={styles.tag}>
+              <Text style={styles.tagText}>{t}</Text>
+            </View>
+          ))}
+        </View>
+        <Text variant="display" style={styles.title}>
+          {h.topic}
+        </Text>
+        <Text variant="body" color={colors.muted}>
+          Lesson Architect · {h.board} {h.grade} · {h.duration}
+        </Text>
+      </View>
 
-      <Section icon="flag-outline" title="Learning objectives">
+      <Section number={1} title="Learning objectives">
         <View style={{ gap: spacing.sm }}>
+          {plan.bloom_levels.length > 0 ? (
+            <View style={styles.bloomRow}>
+              {plan.bloom_levels.map((b, i) => (
+                <View key={`${b}-${i}`} style={styles.bloomChip}>
+                  <Text style={styles.bloomText}>#{b}</Text>
+                </View>
+              ))}
+            </View>
+          ) : null}
           {plan.objectives.map((o, i) => (
             <View key={i} style={styles.objRow}>
-              <Text variant="bodyMedium" color={colors.amberDark}>
-                {i + 1}.
-              </Text>
-              <Text variant="body" style={{ flex: 1, lineHeight: 21 }}>
+              <Ionicons name="checkmark-circle-outline" size={18} color={colors.success} style={{ marginTop: 1 }} />
+              <Text variant="body" style={{ flex: 1, lineHeight: 22 }}>
                 {o}
               </Text>
-              {plan.bloom_levels[i] ? <Pill label={plan.bloom_levels[i] as string} tone="amber" /> : null}
             </View>
           ))}
         </View>
       </Section>
 
-      <Section icon="cube-outline" title="Materials & resources">
+      <Section number={2} title="Materials & resources">
         <View style={{ gap: spacing.xs }}>
           {plan.materials.map((m, i) => (
             <Bullet key={i} text={m} />
@@ -35,41 +60,37 @@ export function LessonPlanView({ plan }: { plan: LessonPlan }) {
         </View>
       </Section>
 
-      <Section icon="bulb-outline" title="Hook / starter" time={plan.hook.duration}>
+      <Section number={3} title="Hook / starter" time={plan.hook.duration}>
         <Text variant="label">{plan.hook.activity}</Text>
-        <Text variant="body" style={{ marginTop: spacing.xs, lineHeight: 21 }}>
+        <Text variant="body" style={{ marginTop: spacing.xs, lineHeight: 22 }}>
           {plan.hook.instructions}
         </Text>
       </Section>
 
-      <Section icon="layers-outline" title="Concept delivery">
+      <Section number={4} title="Main teaching content">
         <View style={{ gap: spacing.md }}>
           {plan.concept_delivery.map((step) => (
-            <View key={step.step} style={styles.step}>
-              <View style={styles.stepNum}>
-                <Text variant="caption" color={colors.ink} style={{ fontWeight: '700' }}>
-                  {step.step}
-                </Text>
-              </View>
-              <View style={{ flex: 1, gap: spacing.xs }}>
-                <Text variant="label">{step.title}</Text>
-                <Text variant="body" style={{ lineHeight: 21 }}>
-                  {step.content}
-                </Text>
-                <ActionLine label="Teacher" text={step.teacher_action} />
-                <ActionLine label="Students" text={step.student_action} />
-              </View>
+            <View key={step.step} style={{ gap: spacing.xs }}>
+              <Text style={styles.stepKicker}>STEP {step.step}</Text>
+              <Text variant="label">{step.title}</Text>
+              <Text variant="body" style={{ lineHeight: 22 }}>
+                {step.content}
+              </Text>
+              <TeacherTip label="Teacher" text={step.teacher_action} />
+              <TeacherTip label="Students" text={step.student_action} muted />
             </View>
           ))}
         </View>
       </Section>
 
-      <Section icon="people-outline" title="Student activity" time={plan.student_activity.duration}>
+      <Section number={5} title="Student activity" time={plan.student_activity.duration}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
           <Text variant="label">{plan.student_activity.title}</Text>
-          <Pill label={plan.student_activity.type} tone="neutral" />
+          <View style={styles.typePill}>
+            <Text style={styles.typePillText}>{plan.student_activity.type}</Text>
+          </View>
         </View>
-        <Text variant="body" style={{ marginTop: spacing.xs, lineHeight: 21 }}>
+        <Text variant="body" style={{ marginTop: spacing.xs, lineHeight: 22 }}>
           {plan.student_activity.instructions}
         </Text>
         <View style={styles.successBox}>
@@ -80,36 +101,34 @@ export function LessonPlanView({ plan }: { plan: LessonPlan }) {
         </View>
       </Section>
 
-      <Section icon="help-circle-outline" title="Formative check + exit ticket" time="5 min">
+      <Section number={6} title="Formative check + exit ticket" time="5 MIN">
         <View style={{ gap: spacing.xs }}>
           {plan.formative_check.questions.map((q, i) => (
             <View key={i} style={styles.objRow}>
               <Text variant="bodyMedium" color={colors.amberDark}>
                 Q{i + 1}.
               </Text>
-              <Text variant="body" style={{ flex: 1, lineHeight: 21 }}>
+              <Text variant="body" style={{ flex: 1, lineHeight: 22 }}>
                 {q}
               </Text>
             </View>
           ))}
         </View>
         <View style={styles.exitBox}>
-          <Text variant="caption" color={colors.muted} style={{ marginBottom: 2 }}>
-            EXIT TICKET
-          </Text>
+          <Text style={styles.exitLabel}>EXIT TICKET</Text>
           <Text variant="bodyMedium">{plan.formative_check.exit_ticket}</Text>
         </View>
       </Section>
 
-      <Section icon="git-branch-outline" title="Differentiation">
-        <ActionLine label="Support" text={plan.differentiation.support} />
-        <View style={{ height: spacing.xs }} />
-        <ActionLine label="Extension" text={plan.differentiation.extension} />
+      <Section number={7} title="Differentiation">
+        <TeacherTip label="Support" text={plan.differentiation.support} />
+        <View style={{ height: spacing.sm }} />
+        <TeacherTip label="Extension" text={plan.differentiation.extension} />
       </Section>
 
       {plan.homework ? (
-        <Section icon="home-outline" title="Homework">
-          <Text variant="body" style={{ lineHeight: 21 }}>
+        <Section number={8} title="Closure & homework">
+          <Text variant="body" style={{ lineHeight: 22 }}>
             {plan.homework}
           </Text>
         </Section>
@@ -118,47 +137,37 @@ export function LessonPlanView({ plan }: { plan: LessonPlan }) {
   );
 }
 
-function HeaderBlock({ plan }: { plan: LessonPlan }) {
-  const h = plan.header;
-  return (
-    <Card highlight>
-      <Text variant="caption" color={colors.ink}>
-        {h.board} · {h.grade} · {h.subject}
-      </Text>
-      <Text variant="h2" color={colors.ink} style={{ marginTop: 2 }}>
-        {h.topic}
-      </Text>
-      <View style={styles.metaRow}>
-        <Meta icon="time-outline" text={h.duration} />
-        <Meta icon="calendar-outline" text={h.date} />
-        <Meta icon="person-outline" text={h.teacher} />
-      </View>
-    </Card>
-  );
-}
-
+/** Collapsible card; open by default. Step number lives in the header (no timeline). */
 function Section({
-  icon,
+  number,
   title,
   time,
   children,
 }: {
-  icon: keyof typeof Ionicons.glyphMap;
+  number: number;
   title: string;
   time?: string;
   children: React.ReactNode;
 }) {
+  const [open, setOpen] = useState(true);
   return (
-    <Card>
-      <View style={styles.sectionHeader}>
-        <Ionicons name={icon} size={18} color={colors.amberDark} />
-        <Text variant="label" style={{ flex: 1 }}>
+    <View style={styles.card}>
+      <Pressable onPress={() => setOpen((o) => !o)} style={styles.cardHeader}>
+        <View style={styles.numCircle}>
+          <Text style={styles.numText}>{number}</Text>
+        </View>
+        <Text variant="h3" style={{ flex: 1 }}>
           {title}
         </Text>
-        {time ? <Pill label={time} tone="amber" /> : null}
-      </View>
-      <View style={{ marginTop: spacing.sm }}>{children}</View>
-    </Card>
+        {time ? (
+          <View style={styles.timeTag}>
+            <Text style={styles.timeText}>{time}</Text>
+          </View>
+        ) : null}
+        <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={18} color={colors.mutedLight} />
+      </Pressable>
+      {open ? <View style={styles.cardBody}>{children}</View> : null}
+    </View>
   );
 }
 
@@ -168,29 +177,21 @@ function Bullet({ text }: { text: string }) {
       <Text variant="body" color={colors.amberDark}>
         •
       </Text>
-      <Text variant="body" style={{ flex: 1, lineHeight: 21 }}>
+      <Text variant="body" style={{ flex: 1, lineHeight: 22 }}>
         {text}
       </Text>
     </View>
   );
 }
 
-function ActionLine({ label, text }: { label: string; text: string }) {
+/** Inset box with a left amber border for teacher/student guidance. */
+function TeacherTip({ label, text, muted }: { label: string; text: string; muted?: boolean }) {
   return (
-    <Text variant="caption" color={colors.muted} style={{ lineHeight: 19 }}>
-      <Text variant="caption" color={colors.ink} style={{ fontWeight: '700' }}>
-        {label}:{' '}
+    <View style={styles.tipBox}>
+      <Text variant="caption" color={muted ? colors.muted : colors.amberDark} style={{ fontFamily: fonts.bodySemibold }}>
+        {label}
       </Text>
-      {text}
-    </Text>
-  );
-}
-
-function Meta({ icon, text }: { icon: keyof typeof Ionicons.glyphMap; text: string }) {
-  return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-      <Ionicons name={icon} size={13} color={colors.ink} />
-      <Text variant="caption" color={colors.ink}>
+      <Text variant="body" color={colors.muted} style={{ lineHeight: 21, fontStyle: 'italic' }}>
         {text}
       </Text>
     </View>
@@ -198,33 +199,40 @@ function Meta({ icon, text }: { icon: keyof typeof Ionicons.glyphMap; text: stri
 }
 
 const styles = StyleSheet.create({
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  tag: { height: 28, justifyContent: 'center', paddingHorizontal: spacing.md, borderRadius: radius.pill, backgroundColor: '#FFFBEB' },
+  tagText: { fontFamily: fonts.bodyMedium, fontSize: 12, color: '#D97706' },
+  title: { fontSize: 28, lineHeight: 34 },
+
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+    shadowColor: '#000000',
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 1,
+  },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, padding: spacing.lg },
+  numCircle: { width: 24, height: 24, borderRadius: 12, backgroundColor: colors.amber, alignItems: 'center', justifyContent: 'center' },
+  numText: { fontFamily: fonts.bodySemibold, fontSize: 13, color: colors.ink },
+  cardBody: { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg },
+  timeTag: { height: 24, justifyContent: 'center', paddingHorizontal: spacing.sm, borderRadius: radius.pill, backgroundColor: '#FFFBEB' },
+  timeText: { fontFamily: fonts.bodySemibold, fontSize: 11, color: '#D97706', letterSpacing: 0.3 },
+
+  bloomRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: spacing.xs },
+  bloomChip: { paddingHorizontal: spacing.sm, paddingVertical: 4, borderRadius: radius.pill, backgroundColor: '#EDE9FE' },
+  bloomText: { fontFamily: fonts.bodyMedium, fontSize: 12, color: '#6D28D9' },
+
   objRow: { flexDirection: 'row', gap: spacing.sm, alignItems: 'flex-start' },
-  metaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, marginTop: spacing.md },
-  step: { flexDirection: 'row', gap: spacing.sm },
-  stepNum: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#FCE8B8',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  successBox: {
-    flexDirection: 'row',
-    gap: spacing.xs,
-    alignItems: 'center',
-    marginTop: spacing.sm,
-    backgroundColor: '#D8F2E6',
-    padding: spacing.sm,
-    borderRadius: radius.sm,
-  },
-  exitBox: {
-    marginTop: spacing.sm,
-    backgroundColor: colors.canvas,
-    padding: spacing.md,
-    borderRadius: radius.sm,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.amber,
-  },
+  stepKicker: { fontFamily: fonts.bodySemibold, fontSize: 11, color: colors.mutedLight, letterSpacing: 0.5 },
+  typePill: { paddingHorizontal: spacing.sm, paddingVertical: 3, borderRadius: radius.pill, backgroundColor: colors.canvas },
+  typePillText: { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.muted },
+
+  tipBox: { borderLeftWidth: 3, borderLeftColor: colors.amber, backgroundColor: '#FAFAFA', paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: radius.sm, gap: 2 },
+  successBox: { flexDirection: 'row', gap: spacing.xs, alignItems: 'center', marginTop: spacing.sm, backgroundColor: '#D8F2E6', padding: spacing.sm, borderRadius: radius.sm },
+  exitBox: { marginTop: spacing.sm, backgroundColor: colors.canvas, padding: spacing.md, borderRadius: radius.sm, borderLeftWidth: 3, borderLeftColor: colors.amber },
+  exitLabel: { fontFamily: fonts.bodySemibold, fontSize: 11, color: colors.muted, letterSpacing: 0.5, marginBottom: 2 },
 });

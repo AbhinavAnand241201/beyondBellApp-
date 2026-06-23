@@ -71,34 +71,46 @@ function PlanCard({ plan, cycle, isFounding, current, onSubscribe }: { plan: Pla
   const annual = isFounding && plan.foundingAnnual ? plan.foundingAnnual : plan.annual;
   const price = cycle === 'monthly' ? `₹${plan.monthly}/mo` : `₹${annual}/yr`;
   const savings = annualSavingsPct(plan);
+  // Standard is the recommended (active-highlighted) card; Pro gets the dark outline.
+  const recommended = plan.tier === 'standard';
   return (
-    <Card highlight={plan.tier === 'pro'}>
+    <Card padded={false} style={[styles.planCard, recommended ? styles.planActive : styles.planInactive]}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-        <Text variant="h2" color={plan.tier === 'pro' ? colors.ink : colors.ink}>
-          {plan.name}
-        </Text>
+        <Text variant="h2">{plan.name}</Text>
+        {recommended ? <Pill label="Popular" tone="amber" /> : null}
         {current ? <Pill label="Current" tone="success" /> : null}
         {cycle === 'annual' && savings > 0 ? <Pill label={`Save ${savings}%`} tone="amber" /> : null}
       </View>
-      <Text variant="caption" color={colors.ink}>
+      <Text variant="caption" color={colors.muted}>
         {plan.highlight}
       </Text>
-      <Text variant="display" color={colors.ink} style={{ marginVertical: spacing.xs }}>
+      <Text variant="display" style={{ marginVertical: spacing.xs }}>
         {price}
       </Text>
       <View style={{ gap: spacing.xs, marginVertical: spacing.sm }}>
         {plan.features.map((f) => (
           <View key={f} style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'flex-start' }}>
             <Ionicons name="checkmark-circle" size={16} color={colors.success} style={{ marginTop: 2 }} />
-            <Text variant="body" color={colors.ink} style={{ flex: 1 }}>
+            <Text variant="body" style={{ flex: 1 }}>
               {f}
             </Text>
           </View>
         ))}
       </View>
-      <Button title={current ? 'Your plan' : `Choose ${plan.name}`} disabled={current} onPress={onSubscribe} fullWidth variant={plan.tier === 'pro' ? 'primary' : 'secondary'} />
+      <Button
+        title={current ? 'Your plan' : `Choose ${plan.name}`}
+        disabled={current}
+        onPress={onSubscribe}
+        fullWidth
+        variant={recommended ? 'primary' : 'secondary'}
+      />
     </Card>
   );
 }
 
-const styles = StyleSheet.create({ safe: { flex: 1, backgroundColor: colors.canvas } });
+const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.canvas },
+  planCard: { borderRadius: 16, padding: 20 },
+  planActive: { borderWidth: 2, borderColor: colors.amber, backgroundColor: '#FFFDF5' },
+  planInactive: { borderWidth: 1, borderColor: '#1F2937', backgroundColor: colors.surface },
+});

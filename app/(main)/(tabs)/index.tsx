@@ -1,22 +1,30 @@
 import { useMemo, useState } from 'react';
-import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query';
 
-import { Banner, Card, OptionChip, Pill, SkeletonList, Text } from '@/components/ui';
+import { Banner, SkeletonList, Text } from '@/components/ui';
 import { EmptyState, ErrorState } from '@/components/QueryStates';
 import { PostCard } from '@/features/community/PostCard';
 import { MorningBriefingCard } from '@/features/community/MorningBriefingCard';
 import { OnboardingChecklistCard } from '@/features/community/OnboardingChecklistCard';
+import {
+  DashboardHeader,
+  GreetingBlock,
+  LibraryResourceCards,
+  ProfileSummaryCard,
+  ImpactCard,
+  UpcomingEventsCard,
+} from '@/features/dashboard/DashboardSections';
+import { useDashboard } from '@/features/dashboard/useDashboard';
 import { fetchFeed, fetchSavedPosts, fetchFollowingIds } from '@/features/community/queries';
 import { applyReaction } from '@/features/community/useReact';
 import { toggleReaction } from '@/features/community/mutations';
 import type { FeedPost } from '@/features/community/types';
 import type { EmojiType } from '@/types/db';
 import { useAuth } from '@/providers/AuthProvider';
-import { useCurrentUser } from '@/features/user/useCurrentUser';
 import { useEducatorBasics } from '@/features/user/useEducatorBasics';
 import { env } from '@/config/env';
 import { colors, spacing } from '@/theme/tokens';
@@ -26,7 +34,7 @@ const PAGE = 50;
 
 export default function HomeFeed() {
   const { user } = useAuth();
-  const me = useCurrentUser(user?.id);
+  const dash = useDashboard(user?.id);
   const basics = useEducatorBasics(user?.id);
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<FeedTab>('all');
@@ -65,7 +73,6 @@ export default function HomeFeed() {
     return allPosts;
   }, [tab, allPosts, saved.data, following.data]);
 
-  // Optimistic reaction against the infinite-query cache.
   const react = useMutation({
     mutationFn: ({ post, emoji }: { post: FeedPost; emoji: EmojiType }) => toggleReaction(user?.id as string, post.id, emoji, post.myReaction),
     onMutate: async ({ post, emoji }) => {
@@ -96,42 +103,65 @@ export default function HomeFeed() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text variant="h1">Home</Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-          {me.data ? <Pill label={`${me.data.circlePoints} pts`} tone="amber" /> : null}
-          <Pressable onPress={() => router.push('/(main)/messages')} hitSlop={8} accessibilityLabel="Messages">
-            <Ionicons name="chatbubble-ellipses-outline" size={24} color={colors.ink} />
-          </Pressable>
-        </View>
-      </View>
+      <DashboardHeader />
 
       <FlatList
         data={posts}
         keyExtractor={(p) => p.id}
         contentContainerStyle={{ padding: spacing.lg, paddingTop: spacing.sm, gap: spacing.md, flexGrow: 1 }}
         ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
-        refreshControl={<RefreshControl refreshing={feed.isRefetching} onRefresh={() => feed.refetch()} tintColor={colors.amber} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={feed.isRefetching}
+            onRefresh={() => {
+              void feed.refetch();
+              void dash.refetch();
+            }}
+            tintColor={colors.amber}
+          />
+        }
         onEndReachedThreshold={0.5}
         onEndReached={() => {
           if (tab !== 'saved' && feed.hasNextPage && !feed.isFetchingNextPage) void feed.fetchNextPage();
         }}
         ListHeaderComponent={
-          <View style={{ gap: spacing.md, marginBottom: spacing.md }}>
+          <View style={{ gap: spacing.lg, marginBottom: spacing.lg }}>
             {!env.isConfigured ? (
               <Banner tone="warning" title="Backend not connected" message="Connect Supabase in .env to load your feed." />
             ) : null}
+
+            {dash.data ? <GreetingBlock name={dash.data.displayName} /> : null}
+
+            <MorningBriefingCard userId={user?.id} />
             <OnboardingChecklistCard userId={user?.id} />
-            {tab === 'all' ? <MorningBriefingCard userId={user?.id} /> : null}
-            <FlatList
-              horizontal
-              data={TABS}
-              keyExtractor={(t) => t.value}
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: spacing.sm }}
-              renderItem={({ item }) => <OptionChip label={item.label} selected={tab === item.value} onPress={() => setTab(item.value)} />}
-            />
+            <LibraryResourceCards />
+            {dash.data ? <ProfileSummaryCard d={dash.data} /> : null}
+            <ImpactCard hasImpact={(dash.data?.counts.resources ?? 0) + (dash.data?.counts.replies ?? 0) > 0} />
+            <UpcomingEventsCard />
+
+            {/* Circle Activity */}
+            <View style={{ gap: spacing.md }}>
+              <View style={styles.sectionHeader}>
+                <Text variant="h3">Circle Activity</Text>
+                <Pressable onPress={() => setTab('all')}>
+                  <Text variant="label" color={colors.amberDark}>View All</Text>
+                </Pressable>
+              </View>
+              <View style={styles.tabRow}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.lg }}>
+                  {TABS.map((item) => {
+                    const active = tab === item.value;
+                    return (
+                      <Pressable key={item.value} onPress={() => setTab(item.value)} style={[styles.tabItem, active && styles.tabItemActive]}>
+                        <Text variant="label" color={active ? colors.ink : colors.muted}>
+                          {item.label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </ScrollView>
+              </View>
+            </View>
           </View>
         }
         renderItem={({ item }) => (
@@ -143,11 +173,7 @@ export default function HomeFeed() {
           ) : feed.isError ? (
             <ErrorState message="Couldn’t load your feed." onRetry={() => feed.refetch()} />
           ) : (
-            <EmptyState
-              icon="people-outline"
-              title="Your feed is quiet"
-              message="Join a Space to see posts from educators like you."
-            />
+            <EmptyState icon="people-outline" title="Your feed is quiet" message="Join a Space to see posts from educators like you." />
           )
         }
         ListFooterComponent={
@@ -168,7 +194,10 @@ export default function HomeFeed() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.canvas },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg, paddingTop: spacing.sm },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  tabRow: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border },
+  tabItem: { paddingBottom: spacing.sm, borderBottomWidth: 2, borderBottomColor: 'transparent' },
+  tabItemActive: { borderBottomColor: colors.amber },
   fab: {
     position: 'absolute',
     right: spacing.lg,

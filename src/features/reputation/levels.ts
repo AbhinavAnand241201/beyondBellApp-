@@ -12,16 +12,16 @@ export interface LevelDef {
 }
 
 export const LEVELS: LevelDef[] = [
-  { level: 1, name: 'Newcomer', minPoints: 0, ring: '#C9C4BA' },
-  { level: 2, name: 'Contributor', minPoints: 100, ring: '#8FB7A6' },
-  { level: 3, name: 'Regular', minPoints: 500, ring: '#5FA8D3' },
+  { level: 1, name: 'New Voice', minPoints: 0, ring: '#C9C4BA' },
+  { level: 2, name: 'Active Contributor', minPoints: 100, ring: '#8FB7A6' },
+  { level: 3, name: 'Trusted Regular', minPoints: 500, ring: '#5FA8D3' },
   { level: 4, name: 'Mentor', minPoints: 1500, ring: '#7C6FD0' },
   { level: 5, name: 'Leader', minPoints: 4000, ring: '#E07A5F' },
   { level: 6, name: 'Expert', minPoints: 9000, ring: '#F5A400' },
   { level: 7, name: 'Luminary', minPoints: 20000, ring: '#F5A400' },
 ];
 
-const FALLBACK_LEVEL: LevelDef = { level: 1, name: 'Newcomer', minPoints: 0, ring: '#C9C4BA' };
+const FALLBACK_LEVEL: LevelDef = { level: 1, name: 'New Voice', minPoints: 0, ring: '#C9C4BA' };
 
 export function levelDef(level: number): LevelDef {
   return LEVELS.find((l) => l.level === level) ?? FALLBACK_LEVEL;

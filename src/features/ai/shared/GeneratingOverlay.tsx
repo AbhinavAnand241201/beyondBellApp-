@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Easing, Modal, StyleSheet, View } from 'react-native';
+import { Animated, Easing, Modal, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { Text } from '@/components/ui';
@@ -13,18 +13,18 @@ export interface GeneratingOverlayProps {
   subtitle?: string;
   /** Cosmetic micro-steps that advance on a timer while generation runs. */
   steps: string[];
-  /** Icon in the pulsing mark. Defaults to "sparkles". */
+  /** Icon in the pulsing mark. Defaults to "flash". */
   icon?: keyof typeof Ionicons.glyphMap;
 }
 
 /**
- * Shared full-screen "AI is thinking…" overlay used by every AI tool. The
- * micro-steps advance on a timer (purely cosmetic — the real call runs in
+ * Shared full-screen "AI is thinking…" generation state used by every AI tool.
+ * The micro-steps advance on a timer (purely cosmetic — the real call runs in
  * parallel). Configure per-tool via props; do NOT fork this component.
  *
  * Reused by: Tool 01 Lesson Architect, Tool 02 Assessment Builder, …
  */
-export function GeneratingOverlay({ visible, title, subtitle, steps, icon = 'sparkles' }: GeneratingOverlayProps) {
+export function GeneratingOverlay({ visible, title, subtitle, steps, icon = 'flash' }: GeneratingOverlayProps) {
   const [active, setActive] = useState(0);
   const pulse = useRef(new Animated.Value(0)).current;
 
@@ -44,8 +44,8 @@ export function GeneratingOverlay({ visible, title, subtitle, steps, icon = 'spa
     if (!visible) return;
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(pulse, { toValue: 1, duration: 900, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-        Animated.timing(pulse, { toValue: 0, duration: 900, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 1, duration: 850, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 0, duration: 850, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
       ]),
     );
     loop.start();
@@ -53,39 +53,59 @@ export function GeneratingOverlay({ visible, title, subtitle, steps, icon = 'spa
   }, [visible, pulse]);
 
   const scale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.08] });
+  const dim = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 0.55] });
+  // Progress reflects how far through the cosmetic steps we are.
+  const progress = steps.length > 1 ? (active + 0.5) / steps.length : 0.5;
 
   return (
-    <Modal visible={visible} transparent animationType="fade">
-      <View style={styles.backdrop}>
-        <View style={styles.card}>
+    <Modal visible={visible} transparent={false} animationType="fade" presentationStyle="fullScreen">
+      <View style={styles.screen}>
+        <View style={styles.center}>
           <Animated.View style={[styles.mark, { transform: [{ scale }] }]}>
-            <Ionicons name={icon} size={26} color={colors.ink} />
+            <Ionicons name={icon} size={28} color={colors.ink} />
           </Animated.View>
-          <Text variant="h3" style={{ textAlign: 'center' }}>
+
+          <Text variant="h2" style={{ textAlign: 'center', marginTop: spacing.xl }}>
             {title}
           </Text>
           {subtitle ? (
-            <Text variant="caption" color={colors.muted} style={{ textAlign: 'center' }}>
+            <Text variant="body" color={colors.muted} style={{ textAlign: 'center', marginTop: spacing.xs }}>
               {subtitle}
             </Text>
           ) : null}
 
+          {/* Progress bar with rounded caps */}
+          <View style={styles.track}>
+            <View style={[styles.fill, { width: `${Math.min(100, Math.max(8, progress * 100))}%` }]} />
+          </View>
+
+          {/* Step checklist */}
           <View style={styles.steps}>
             {steps.map((label, i) => {
               const done = i < active;
               const current = i === active;
+              if (current) {
+                return (
+                  <View key={label} style={styles.activeStep}>
+                    <View style={styles.activeDot} />
+                    <Animated.Text style={[styles.activeText, { opacity: dim }]} numberOfLines={2}>
+                      {label}
+                    </Animated.Text>
+                    <Text style={styles.generating}>GENERATING…</Text>
+                  </View>
+                );
+              }
               return (
                 <View key={label} style={styles.step}>
-                  {done ? (
-                    <Ionicons name="checkmark-circle" size={20} color={colors.success} />
-                  ) : current ? (
-                    <ActivityIndicator size="small" color={colors.amberDark} />
-                  ) : (
-                    <Ionicons name="ellipse-outline" size={20} color={colors.border} />
-                  )}
-                  <Text variant="body" color={done || current ? colors.ink : colors.mutedLight}>
+                  <Ionicons
+                    name={done ? 'checkmark-circle' : 'ellipse-outline'}
+                    size={22}
+                    color={done ? colors.success : colors.border}
+                  />
+                  <Text variant="body" color={done ? colors.ink : colors.mutedLight} style={{ flex: 1 }} numberOfLines={2}>
                     {label}
                   </Text>
+                  {done ? <Text style={styles.done}>DONE</Text> : null}
                 </View>
               );
             })}
@@ -97,25 +117,44 @@ export function GeneratingOverlay({ visible, title, subtitle, steps, icon = 'spa
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: colors.overlay, alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.xl,
-    gap: spacing.sm,
-    alignItems: 'center',
-    width: '100%',
-    maxWidth: 360,
-  },
+  screen: { flex: 1, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
+  center: { width: '100%', maxWidth: 420, alignItems: 'center' },
   mark: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
+    width: 64,
+    height: 64,
+    borderRadius: 20,
     backgroundColor: colors.amber,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.sm,
+    shadowColor: colors.amber,
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 6,
   },
-  steps: { alignSelf: 'stretch', gap: spacing.md, marginTop: spacing.lg },
+  track: {
+    width: '100%',
+    height: 6,
+    borderRadius: radius.pill,
+    backgroundColor: '#F3F4F6',
+    overflow: 'hidden',
+    marginTop: spacing.xl,
+  },
+  fill: { height: '100%', borderRadius: radius.pill, backgroundColor: colors.amber },
+  steps: { alignSelf: 'stretch', gap: spacing.md, marginTop: spacing.xl + spacing.sm },
   step: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  done: { fontFamily: 'Inter_600SemiBold', fontSize: 11, color: colors.success, letterSpacing: 0.5 },
+  activeStep: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.amber,
+    backgroundColor: '#FFFBEB',
+    borderRadius: radius.sm,
+    padding: spacing.md,
+  },
+  activeDot: { width: 20, height: 20, borderRadius: 10, borderWidth: 3, borderColor: colors.amber },
+  activeText: { flex: 1, fontFamily: 'Inter_600SemiBold', fontSize: 16, color: colors.amberDark },
+  generating: { fontFamily: 'Inter_600SemiBold', fontSize: 11, color: colors.amberDark, letterSpacing: 0.5 },
 });

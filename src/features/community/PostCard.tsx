@@ -22,6 +22,13 @@ export interface PostCardProps {
 function PostCardBase({ post, onToggleReaction, onOpenReplies }: PostCardProps) {
   const { user } = useAuth();
   const typeLabel = POST_TYPE_LABEL[post.postType];
+  // Color-coded activity cards (left border + pale tint) for briefing/announcement.
+  const accent =
+    post.postType === 'morning_briefing'
+      ? { borderLeftWidth: 4, borderLeftColor: colors.amber, backgroundColor: '#FFFBEB' }
+      : post.postType === 'announcement'
+        ? { borderLeftWidth: 4, borderLeftColor: '#3B82F6', backgroundColor: '#EFF6FF' }
+        : null;
   const [expanded, setExpanded] = useState(false);
   const [saved, setSaved] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
@@ -76,7 +83,7 @@ function PostCardBase({ post, onToggleReaction, onOpenReplies }: PostCardProps) 
   }
 
   return (
-    <Card>
+    <Card style={[styles.card, accent]}>
       {/* Author row */}
       <View style={styles.header}>
         <Pressable
@@ -157,6 +164,7 @@ function PostCardBase({ post, onToggleReaction, onOpenReplies }: PostCardProps) 
 export const PostCard = memo(PostCardBase);
 
 const styles = StyleSheet.create({
+  card: { borderRadius: 16, borderColor: '#F3F4F6' },
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   authorTap: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },

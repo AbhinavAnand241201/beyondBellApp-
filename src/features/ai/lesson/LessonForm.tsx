@@ -1,4 +1,4 @@
-import { View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 
 import { OptionChip, Segmented, Select, Text, TextField } from '@/components/ui';
 import { colors, spacing } from '@/theme/tokens';
@@ -20,6 +20,42 @@ import {
 export interface LessonFormProps {
   value: LessonInput;
   onChange: (next: LessonInput) => void;
+}
+
+/** A label + horizontally-scrollable row of selectable chips. */
+function ChipRow<T extends string>({
+  label,
+  options,
+  selected,
+  onSelect,
+  renderLabel,
+}: {
+  label: string;
+  options: readonly T[];
+  selected: T;
+  onSelect: (value: T) => void;
+  renderLabel?: (value: T) => string;
+}) {
+  return (
+    <View style={{ gap: spacing.sm }}>
+      <Text variant="label">{label}</Text>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ gap: spacing.sm, paddingRight: spacing.lg }}
+        keyboardShouldPersistTaps="handled"
+      >
+        {options.map((opt) => (
+          <OptionChip
+            key={opt}
+            label={renderLabel ? renderLabel(opt) : opt}
+            selected={opt === selected}
+            onPress={() => onSelect(opt)}
+          />
+        ))}
+      </ScrollView>
+    </View>
+  );
 }
 
 /**
@@ -56,26 +92,12 @@ export function LessonForm({ value, onChange }: LessonFormProps) {
   const difficultyHint = DIFFICULTY_OPTIONS.find((d) => d.value === value.difficulty)?.hint;
 
   return (
-    <View style={{ gap: spacing.lg }}>
-      {/* Board → Grade */}
-      <View style={{ flexDirection: 'row', gap: spacing.md }}>
-        <View style={{ flex: 1 }}>
-          <Select
-            label="Board"
-            value={value.board}
-            options={BOARD_OPTIONS.map((b) => ({ value: b, label: b }))}
-            onChange={(v) => setBoard(v as Board)}
-          />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Select
-            label="Grade"
-            value={value.grade}
-            options={grades.map((g) => ({ value: g, label: g }))}
-            onChange={setGrade}
-          />
-        </View>
-      </View>
+    <View style={{ gap: spacing.xl }}>
+      {/* Board (horizontal chips) */}
+      <ChipRow label="Board" options={BOARD_OPTIONS} selected={value.board} onSelect={setBoard} />
+
+      {/* Grade (horizontal chips, filtered by board) */}
+      <ChipRow label="Grade" options={grades} selected={value.grade} onSelect={setGrade} />
 
       {/* Subject (depends on board+grade) */}
       <Select
@@ -97,12 +119,13 @@ export function LessonForm({ value, onChange }: LessonFormProps) {
         hint="Tip: match your textbook chapter name for the closest alignment."
       />
 
-      {/* Duration */}
-      <Select
-        label="Duration"
-        value={String(value.durationMinutes)}
-        options={DURATION_OPTIONS.map((d) => ({ value: String(d), label: `${d} minutes` }))}
-        onChange={(v) => onChange({ ...value, durationMinutes: Number(v) })}
+      {/* Duration (horizontal chips) */}
+      <ChipRow
+        label="Lesson duration"
+        options={DURATION_OPTIONS.map((d) => String(d))}
+        selected={String(value.durationMinutes)}
+        onSelect={(v) => onChange({ ...value, durationMinutes: Number(v) })}
+        renderLabel={(v) => `${v} min`}
       />
 
       {/* Learning objective (optional) */}

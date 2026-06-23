@@ -10,6 +10,8 @@ export { TextField } from './TextField';
 export type { TextFieldProps } from './TextField';
 export { Avatar } from './Avatar';
 export type { AvatarProps } from './Avatar';
+export { BrandLogo } from './BrandLogo';
+export type { BrandLogoProps } from './BrandLogo';
 export { Pill } from './Pill';
 export type { PillProps } from './Pill';
 export { Banner } from './Banner';
