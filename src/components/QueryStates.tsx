@@ -2,7 +2,7 @@ import { ActivityIndicator, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { Button, Text } from '@/components/ui';
-import { colors, spacing } from '@/theme/tokens';
+import { colors, radius, spacing } from '@/theme/tokens';
 
 export function LoadingState({ label }: { label?: string }) {
   return (
@@ -40,11 +40,25 @@ export function EmptyState({
   message?: string;
 }) {
   return (
-    <View style={{ alignItems: 'center', justifyContent: 'center', padding: spacing.xl, gap: spacing.sm }}>
-      <Ionicons name={icon} size={36} color={colors.mutedLight} />
-      <Text variant="h3">{title}</Text>
+    <View style={{ flex: 1, minHeight: 400, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.xxl }}>
+      <View
+        style={{
+          width: 64,
+          height: 64,
+          borderRadius: radius.lg,
+          backgroundColor: '#F3F4F6',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: spacing.lg,
+        }}
+      >
+        <Ionicons name={icon} size={32} color={colors.mutedLight} />
+      </View>
+      <Text variant="h3" style={{ textAlign: 'center' }}>
+        {title}
+      </Text>
       {message ? (
-        <Text variant="body" color={colors.muted} style={{ textAlign: 'center' }}>
+        <Text variant="body" color={colors.mutedLight} style={{ textAlign: 'center', marginTop: spacing.sm }}>
           {message}
         </Text>
       ) : null}

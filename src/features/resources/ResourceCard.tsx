@@ -2,14 +2,16 @@ import { StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { Card, Pill, Text } from '@/components/ui';
-import { colors, spacing } from '@/theme/tokens';
+import { colors, fonts, radius, spacing } from '@/theme/tokens';
 import { RESOURCE_TYPE_LABEL, type Resource } from './types';
 
 export function ResourceCard({ resource }: { resource: Resource }) {
   return (
-    <Card>
+    <Card style={styles.card}>
       <View style={styles.topRow}>
-        <Pill label={RESOURCE_TYPE_LABEL[resource.resourceType]} tone="neutral" />
+        <View style={styles.typeTag}>
+          <Text style={styles.typeTagText}>{RESOURCE_TYPE_LABEL[resource.resourceType]}</Text>
+        </View>
         {resource.isAiGenerated ? <Pill label="AI" tone="amber" /> : null}
         {resource.isProOnly ? <Pill label="Pro" tone="success" /> : null}
       </View>
@@ -47,7 +49,10 @@ export function ResourceCard({ resource }: { resource: Resource }) {
 }
 
 const styles = StyleSheet.create({
-  topRow: { flexDirection: 'row', gap: spacing.xs, flexWrap: 'wrap' },
+  card: { borderRadius: 16, borderColor: '#F3F4F6' },
+  typeTag: { paddingHorizontal: spacing.sm, paddingVertical: 4, borderRadius: radius.pill, backgroundColor: '#FEF3C7' },
+  typeTagText: { fontFamily: fonts.bodySemibold, fontSize: 12, color: '#92660A' },
+  topRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, flexWrap: 'wrap' },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginTop: spacing.md },
   metric: { flexDirection: 'row', alignItems: 'center', gap: 3 },
 });

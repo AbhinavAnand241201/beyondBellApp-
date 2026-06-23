@@ -171,9 +171,11 @@ const styles = StyleSheet.create({
   image: {
     marginTop: spacing.md,
     width: '100%',
-    height: 180,
+    aspectRatio: 16 / 9,
     borderRadius: radius.sm,
-    backgroundColor: colors.border,
+    backgroundColor: colors.canvas,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
   },
   actions: {
     marginTop: spacing.md,

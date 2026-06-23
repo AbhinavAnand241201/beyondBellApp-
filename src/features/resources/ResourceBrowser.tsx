@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { FlatList, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -80,6 +80,16 @@ export function ResourceBrowser({ mode, title }: { mode: 'library' | 'public'; t
         }}
         ListHeaderComponent={
           <View style={{ gap: spacing.md, marginBottom: spacing.md }}>
+            <View style={{ gap: spacing.xs }}>
+              <Text variant="display" style={{ fontSize: 28, lineHeight: 34 }}>
+                {title}
+              </Text>
+              <Text variant="body" color={colors.muted}>
+                {mode === 'library'
+                  ? 'Your saved AI outputs and uploaded resources. Only you can see private items until you share them.'
+                  : 'Resources shared by educators across BeyondBell — newest first. Rate what you find useful.'}
+              </Text>
+            </View>
             <TextField
               value={filters.search}
               onChangeText={(v) => patch({ search: v })}
@@ -152,13 +162,17 @@ export function ResourceBrowser({ mode, title }: { mode: 'library' | 'public'; t
 }
 
 function ChipRow({ children }: { children: React.ReactNode }) {
-  return <View style={styles.chipRow}>{children}</View>;
+  return (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow} keyboardShouldPersistTaps="handled">
+      {children}
+    </ScrollView>
+  );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.canvas },
   list: { padding: spacing.lg, flexGrow: 1 },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  chipRow: { flexDirection: 'row', gap: spacing.sm, paddingRight: spacing.lg },
   fab: {
     position: 'absolute',
     right: spacing.lg,

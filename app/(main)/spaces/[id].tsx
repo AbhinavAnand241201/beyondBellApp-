@@ -8,7 +8,7 @@ import { Button, Card, Pill, Text } from '@/components/ui';
 import { ErrorState, LoadingState } from '@/components/QueryStates';
 import { useAuth } from '@/providers/AuthProvider';
 import { fetchSpaceDetail, joinSpace, leaveSpace, type RoomSummary } from '@/features/spaces/queries';
-import { colors, spacing } from '@/theme/tokens';
+import { colors, fonts, radius, spacing } from '@/theme/tokens';
 
 export default function SpaceDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -48,16 +48,21 @@ export default function SpaceDetailScreen() {
           contentContainerStyle={{ padding: spacing.lg, gap: spacing.md }}
           ListHeaderComponent={
             <Card style={{ marginBottom: spacing.sm }}>
-              <Text variant="h3">{space.name}</Text>
+              <Text variant="h2">{space.name}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.xs }}>
+                <View style={styles.typeTag}>
+                  <Text style={styles.typeTagText}>{space.type.charAt(0).toUpperCase() + space.type.slice(1)}</Text>
+                </View>
+                <Text variant="caption" color={colors.muted}>
+                  {space.memberCount} members
+                </Text>
+              </View>
               {space.description ? (
-                <Text variant="body" color={colors.muted} style={{ marginTop: spacing.xs, lineHeight: 21 }}>
+                <Text variant="body" color={colors.muted} style={{ marginTop: spacing.md, lineHeight: 21 }}>
                   {space.description}
                 </Text>
               ) : null}
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginTop: spacing.md }}>
-                <Text variant="caption" color={colors.muted}>
-                  {space.memberCount} members
-                </Text>
                 {space.joined ? (
                   canLeave ? (
                     <Button title="Leave Space" variant="secondary" size="sm" loading={toggle.isPending} onPress={() => toggle.mutate(false)} />
@@ -104,4 +109,8 @@ function RoomCard({ room, onPress }: { room: RoomSummary; onPress: () => void })
   );
 }
 
-const styles = StyleSheet.create({ safe: { flex: 1, backgroundColor: colors.canvas } });
+const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.canvas },
+  typeTag: { paddingHorizontal: spacing.sm, paddingVertical: 3, borderRadius: radius.pill, backgroundColor: '#FFEDD5' },
+  typeTagText: { fontFamily: fonts.bodySemibold, fontSize: 12, color: '#D97706' },
+});
